@@ -10098,11 +10098,14 @@ def recycle_plan_managed_instances(cmd, resource_group_name, name, worker_name):
     subscription_id = get_subscription_id(cmd.cli_ctx)
     
     # Use the App Service Management API to recycle instances
-    recycle_url_base = '/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Web/serverfarms/{}/workerName/{}/recycleinstance?api-version={}'
+    recycle_url_base = '/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Web/serverfarms/{}/workers/{}/recycleinstance?api-version={}'
     recycle_url = recycle_url_base.format(subscription_id, resource_group_name, name, worker_name, client.DEFAULT_API_VERSION)
     request_url = cmd.cli_ctx.cloud.endpoints.resource_manager + recycle_url
     response = send_raw_request(cmd.cli_ctx, "POST", request_url)
-    return response.json()
+    if response.status_code == 200:
+        return "Recycled successfully."
+
+    raise CLIError(f"Unexpected response status '{response.status_code}': {getattr(response, 'text', '')}")
 
 
 def show_plan_rdp_password(cmd, resource_group_name, name):
