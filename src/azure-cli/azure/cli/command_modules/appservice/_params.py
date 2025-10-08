@@ -5,6 +5,7 @@
 
 from argcomplete.completers import FilesCompleter
 
+from azure.cli.command_modules.appservice.actions import FooRuleAddAction
 from knack.arguments import CLIArgumentType
 
 from azure.cli.core.commands.parameters import (resource_group_name_type, get_location_type,
@@ -97,6 +98,8 @@ def load_arguments(self, _):
                    help='get regions which support hosting web apps on Windows Container workers')
         c.argument('linux_workers_enabled', action='store_true',
                    help='get regions which support hosting web apps on Linux workers')
+        c.argument('custom_mode_workers_enabled', action='store_true',
+                   help='get regions which support hosting web apps on custom mode workers')
         c.argument('sku', arg_type=sku_arg_type)
 
     with self.argument_context('appservice plan') as c:
@@ -127,6 +130,23 @@ subscription than the app service environment, please use the resource ID for --
         c.argument('zone_redundant', options_list=['--zone-redundant', '-z'], help='Enable zone redundancy for high availability. Minimum instance count is 2.')
         c.argument('tags', arg_type=tags_type)
         c.argument('async_scaling_enabled', arg_type=get_three_state_flag(), help='Enables async scaling for the app service plan. Set to "true" to create an async operation if there are insufficient workers to scale synchronously. The SKU must be Dedicated.')
+        c.argument('is_custom_mode', action='store_true', is_preview=True, help='host web app on custom mode worker')
+        c.argument('assign_identities', nargs='*', options_list=['--assign-identity'], is_preview=True,
+                    help='accept system or user assigned identities separated by spaces. Use \'[system]\' to refer system assigned identity, or a resource id to refer user assigned identity. Check out help for more examples')
+        c.argument('default_identity', is_preview=True,
+                    help='accept system or user assigned identity separated. Use \'[system]\' to refer system assigned identity, or a resource id to refer user assigned identity.')
+        c.argument('rdp_enabled', is_preview=True,
+                   help='Enable RDP. Requires is-custom-mode to be true.')
+        c.argument('subnet', is_preview=True, help='Name or ID of existing subnet. To create vnet and/or subnet \
+                   use `az network vnet [subnet] create`')
+        c.argument('vnet_name', is_preview=True,
+                   help='Name of the vNet. Mandatory if only subnet name is specified.')
+        c.argument('registry_adapters', is_preview=True, action=FooRuleAddAction, nargs='+',
+                   help="Registry adapter configurations.")
+        c.argument('install_scripts', is_preview=True, action=FooRuleAddAction, nargs='+',
+                   help="Install script configurations.")
+        c.argument('storage_mounts', is_preview=True, action=FooRuleAddAction, nargs='+',
+                   help="Storage mount configurations.")
 
     with self.argument_context('appservice plan update') as c:
         c.argument('sku', arg_type=sku_arg_type)

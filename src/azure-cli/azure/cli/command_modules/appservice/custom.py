@@ -4058,7 +4058,10 @@ class PlanProgressBar(IndeterminateProgressBar):
 
 def create_app_service_plan(cmd, resource_group_name, name, is_linux, hyper_v, per_site_scaling=False,
                             app_service_environment=None, sku='B1', number_of_workers=None, location=None,
-                            tags=None, no_wait=False, zone_redundant=False, async_scaling_enabled=None):
+                            tags=None, no_wait=False, zone_redundant=False, async_scaling_enabled=None,is_custom_mode=False,
+                            assign_identities=None, plan_default_identity=None,
+                            rdp_enabled=False, vnet_name=None, subnet=None,
+                            registry_adapters=None, install_scripts=None, storage_mounts=None):
     HostingEnvironmentProfile, SkuDescription, AppServicePlan = cmd.get_models(
         'HostingEnvironmentProfile', 'SkuDescription', 'AppServicePlan')
 
@@ -7271,13 +7274,14 @@ def list_flexconsumption_zone_redundant_locations(cmd):
     return [{'name': x.name.lower().replace(' ', '')} for x in regions]
 
 
-def list_locations(cmd, sku, linux_workers_enabled=None, hyperv_workers_enabled=None):
+def list_locations(cmd, sku, linux_workers_enabled=None, hyperv_workers_enabled=None, custom_mode_workers_enabled=None):
     web_client = web_client_factory(cmd.cli_ctx)
     full_sku = get_sku_tier(sku)
     # Temporary fix due to regression in this specific API with 2021-03-01, should be removed with the next SDK update
     web_client_geo_regions = web_client.list_geo_regions(sku=full_sku,
                                                          linux_workers_enabled=linux_workers_enabled,
-                                                         xenon_workers_enabled=hyperv_workers_enabled)
+                                                         xenon_workers_enabled=hyperv_workers_enabled,
+                                                         custom_mode_workers_enabled=custom_mode_workers_enabled)
 
     providers_client = providers_client_factory(cmd.cli_ctx)
     providers_client_locations_list = getattr(providers_client.get('Microsoft.Web'), 'resource_types', [])
