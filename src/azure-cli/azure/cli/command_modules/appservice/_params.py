@@ -161,6 +161,25 @@ subscription than the app service environment, please use the resource ID for --
                    completer=get_resource_name_completion_list('Microsoft.Web/serverFarms'),
                    configured_default='appserviceplan', id_part='name', local_context_attribute=None)
 
+    with self.argument_context('appservice plan managed-instance') as c:
+        c.argument('name', arg_type=name_arg_type, help='The name of the app service plan',
+                   completer=get_resource_name_completion_list('Microsoft.Web/serverFarms'),
+                   configured_default='appserviceplan', id_part='name',
+                   local_context_attribute=LocalContextAttribute(name='plan_name', actions=[LocalContextAction.GET]))
+
+    with self.argument_context('appservice plan managed-instance list-instances') as c:
+        c.argument('name', arg_type=name_arg_type, help='The name of the app service plan',
+                   completer=get_resource_name_completion_list('Microsoft.Web/serverFarms'),
+                   configured_default='appserviceplan', id_part='name')
+
+    with self.argument_context('appservice plan managed-instance recycle-instances') as c:
+        c.argument('worker_name', help='The name of the worker instance to recycle')
+
+    with self.argument_context('appservice plan managed-instance show-rdp-password') as c:
+        c.argument('name', arg_type=name_arg_type, help='The name of the app service plan',
+                   completer=get_resource_name_completion_list('Microsoft.Web/serverFarms'),
+                   configured_default='appserviceplan', id_part='name')
+
     with self.argument_context('webapp create') as c:
         c.argument('name', options_list=['--name', '-n'], help='Name of the new web app. Web app name can contain only allow alphanumeric characters and hyphens, it cannot start or end in a hyphen, and must be less than 64 characters.',
                    validator=validate_site_create,
