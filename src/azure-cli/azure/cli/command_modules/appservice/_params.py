@@ -41,6 +41,7 @@ ASE_KINDS = ['ASEv3']
 PUBLIC_NETWORK_ACCESS_MODES = ['Enabled', 'Disabled']
 BASIC_AUTH_TYPES = ['Enabled', 'Disabled']
 DAPR_LOG_LEVELS = ['debug', 'error', 'info', 'warn']
+INSTALL_SCRIPT_TYPES = ['RemoteAzureBlob', 'PlatformStorage']
 
 
 # pylint: disable=too-many-statements, too-many-lines
@@ -180,6 +181,24 @@ subscription than the app service environment, please use the resource ID for --
                    completer=get_resource_name_completion_list('Microsoft.Web/serverFarms'),
                    configured_default='appserviceplan', id_part='name')
 
+    with self.argument_context('appservice plan managed-instance install-script') as c:
+        c.argument('name', arg_type=name_arg_type, help='The name of the app service plan',
+                    completer=get_resource_name_completion_list('Microsoft.Web/serverFarms'),
+                    configured_default='appserviceplan', id_part='name',
+                    local_context_attribute=LocalContextAttribute(name='plan_name', actions=[LocalContextAction.GET]))
+        c.argument('resource_group_name', arg_type=resource_group_name_type)
+
+    with self.argument_context('appservice plan managed-instance install-script add') as c:
+        c.argument('install_script_name', options_list=['--install-script-name'], help='Name of the install script')
+        c.argument('source_uri', options_list=['--source-uri'], help='Source URI of the install script')
+        c.argument('type', options_list=['--type'], help='Type of the install script', arg_type=get_enum_type(INSTALL_SCRIPT_TYPES))
+
+    with self.argument_context('appservice plan managed-instance install-script remove') as c:
+        c.argument('install_script_name', options_list=['--install-script-name'], help='Name of the install script to remove')
+
+    with self.argument_context('appservice plan managed-instance install-script list') as c:
+        pass
+        
     with self.argument_context('webapp create') as c:
         c.argument('name', options_list=['--name', '-n'], help='Name of the new web app. Web app name can contain only allow alphanumeric characters and hyphens, it cannot start or end in a hyphen, and must be less than 64 characters.',
                    validator=validate_site_create,

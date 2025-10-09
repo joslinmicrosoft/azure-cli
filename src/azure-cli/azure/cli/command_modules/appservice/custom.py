@@ -10077,6 +10077,80 @@ def _compute_checksum(input_bytes):
 
 
 # App Service Plan Managed Instance Commands
+
+def list_plan_managed_instance_install_scripts(cmd, resource_group_name, name):
+    """List install scripts for a managed instance app service plan."""
+    from azure.cli.core.commands.client_factory import get_subscription_id
+    client = web_client_factory(cmd.cli_ctx)
+    subscription_id = get_subscription_id(cmd.cli_ctx)
+    api_version = client.DEFAULT_API_VERSION
+    plan_url = f"/subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.Web/serverfarms/{name}?api-version={api_version}"
+    request_url = cmd.cli_ctx.cloud.endpoints.resource_manager + plan_url
+    response = send_raw_request(cmd.cli_ctx, "GET", request_url)
+    plan_json = response.json()
+    # Defensive: property may not exist
+    return plan_json.get('properties', {}).get('installScripts', [])
+
+
+def _patch_plan_install_scripts(cmd, plan_json, resource_group_name, name, scripts):
+    """Helper to PATCH installScripts for a managed instance app service plan."""
+    from azure.cli.core.commands.client_factory import get_subscription_id
+    client = web_client_factory(cmd.cli_ctx)
+    subscription_id = get_subscription_id(cmd.cli_ctx)
+    api_version = client.DEFAULT_API_VERSION
+    patch_obj = {
+        'name': plan_json.get('name'),
+        'sku': plan_json.get('sku'),
+        'properties': {'installScripts': scripts}
+    }
+    patch_url = f"/subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.Web/serverfarms/{name}?api-version={api_version}"
+    patch_request_url = cmd.cli_ctx.cloud.endpoints.resource_manager + patch_url
+    headers = ['Content-Type=application/json']
+    import json
+    patch_response = send_raw_request(cmd.cli_ctx, "PATCH", patch_request_url, body=json.dumps(patch_obj), headers=headers)
+    patch_json = patch_response.json()
+    return patch_json.get('properties', {}).get('installScripts', [])
+
+def add_plan_managed_instance_install_script(cmd, resource_group_name, name, install_script_name, source_uri, type):
+    """Add or update an install script for a managed instance app service plan."""
+    from azure.cli.core.commands.client_factory import get_subscription_id
+    client = web_client_factory(cmd.cli_ctx)
+    subscription_id = get_subscription_id(cmd.cli_ctx)
+    api_version = client.DEFAULT_API_VERSION
+    plan_url = f"/subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.Web/serverfarms/{name}?api-version={api_version}"
+    request_url = cmd.cli_ctx.cloud.endpoints.resource_manager + plan_url
+    response = send_raw_request(cmd.cli_ctx, "GET", request_url)
+    plan_json = response.json()
+    scripts = plan_json.get('properties', {}).get('installScripts', [])
+    # Remove any existing script with same name (case-insensitive)
+    scripts = [s for s in scripts if s.get('name', '').lower() != install_script_name.lower()]
+    # Add new/updated script in correct format
+    scripts.append({
+        'name': install_script_name,
+        'source': {
+            'sourceUri': source_uri,
+            'type': type
+        }
+    })
+    return _patch_plan_install_scripts(cmd, plan_json, resource_group_name, name, scripts)
+
+
+def remove_plan_managed_instance_install_script(cmd, resource_group_name, name, install_script_name):
+    """Remove an install script from a managed instance app service plan."""
+    from azure.cli.core.commands.client_factory import get_subscription_id
+    client = web_client_factory(cmd.cli_ctx)
+    subscription_id = get_subscription_id(cmd.cli_ctx)
+    api_version = client.DEFAULT_API_VERSION
+    plan_url = f"/subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.Web/serverfarms/{name}?api-version={api_version}"
+    request_url = cmd.cli_ctx.cloud.endpoints.resource_manager + plan_url
+    response = send_raw_request(cmd.cli_ctx, "GET", request_url)
+    plan_json = response.json()
+    scripts = plan_json.get('properties', {}).get('installScripts', [])
+    # Remove by case-insensitive name
+    scripts = [s for s in scripts if s.get('name', '').lower() != install_script_name.lower()]
+    return _patch_plan_install_scripts(cmd, plan_json, resource_group_name, name, scripts)
+
+
 def list_plan_managed_instances(cmd, resource_group_name, name):
     """List instances for a managed instance app service plan."""
     from azure.cli.core.commands.client_factory import get_subscription_id
