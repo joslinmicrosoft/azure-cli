@@ -42,7 +42,7 @@ PUBLIC_NETWORK_ACCESS_MODES = ['Enabled', 'Disabled']
 BASIC_AUTH_TYPES = ['Enabled', 'Disabled']
 DAPR_LOG_LEVELS = ['debug', 'error', 'info', 'warn']
 INSTALL_SCRIPT_TYPES = ['RemoteAzureBlob', 'PlatformStorage']
-
+STORAGE_MOUNT_TYPES = ['AzureFiles', 'LocalStorage', 'FileShare']
 
 # pylint: disable=too-many-statements, too-many-lines
 
@@ -198,6 +198,30 @@ subscription than the app service environment, please use the resource ID for --
 
     with self.argument_context('appservice plan managed-instance install-script list') as c:
         pass
+
+    with self.argument_context('appservice plan managed-instance storage-mount') as c:
+        c.argument('name', arg_type=name_arg_type, help='The name of the app service plan',
+                    completer=get_resource_name_completion_list('Microsoft.Web/serverFarms'),
+                    configured_default='appserviceplan', id_part='name',
+                    local_context_attribute=LocalContextAttribute(name='plan_name', actions=[LocalContextAction.GET]))
+        c.argument('resource_group_name', arg_type=resource_group_name_type)
+
+    with self.argument_context('appservice plan managed-instance storage-mount list') as c:
+        pass
+
+    with self.argument_context('appservice plan managed-instance storage-mount add') as c:
+        c.argument('resource_group_name', arg_type=resource_group_name_type)
+        c.argument('name', arg_type=name_arg_type, help='The name of the app service plan')
+        c.argument('mount_name', options_list=['--mount-name'], help='Name of the storage mount')
+        c.argument('mount_type', options_list=['--type'], arg_type=get_enum_type(STORAGE_MOUNT_TYPES), help='Type of the storage mount')
+        c.argument('source', options_list=['--source'], help='Source URI or path for the storage mount')
+        c.argument('destination_path', options_list=['--destination-path'], help='Destination path in the managed instance')
+        c.argument('credentials_secret_uri', options_list=['--credentials-secret-uri'], help='Key Vault secret URI for credentials')
+
+    with self.argument_context('appservice plan managed-instance storage-mount remove') as c:
+        c.argument('resource_group_name', arg_type=resource_group_name_type)
+        c.argument('name', arg_type=name_arg_type, help='The name of the app service plan')
+        c.argument('mount_name', options_list=['--mount-name'], help='Name of the storage mount to remove')
         
     with self.argument_context('webapp create') as c:
         c.argument('name', options_list=['--name', '-n'], help='Name of the new web app. Web app name can contain only allow alphanumeric characters and hyphens, it cannot start or end in a hyphen, and must be less than 64 characters.',

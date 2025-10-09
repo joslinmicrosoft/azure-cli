@@ -10078,6 +10078,78 @@ def _compute_checksum(input_bytes):
 
 # App Service Plan Managed Instance Commands
 
+def list_plan_managed_instance_storage_mounts(cmd, resource_group_name, name):
+    """List storage mounts for a managed instance app service plan."""
+    from azure.cli.core.commands.client_factory import get_subscription_id
+    client = web_client_factory(cmd.cli_ctx)
+    subscription_id = get_subscription_id(cmd.cli_ctx)
+    api_version = client.DEFAULT_API_VERSION
+    plan_url = f"/subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.Web/serverfarms/{name}?api-version={api_version}"
+    request_url = cmd.cli_ctx.cloud.endpoints.resource_manager + plan_url
+    response = send_raw_request(cmd.cli_ctx, "GET", request_url)
+    plan_json = response.json()
+    return plan_json.get('properties', {}).get('storageMounts', [])
+
+def _patch_plan_storage_mounts(cmd, plan_json, resource_group_name, name, mounts):
+    """Helper to PATCH storageMounts for a managed instance app service plan."""
+    from azure.cli.core.commands.client_factory import get_subscription_id
+    client = web_client_factory(cmd.cli_ctx)
+    subscription_id = get_subscription_id(cmd.cli_ctx)
+    api_version = client.DEFAULT_API_VERSION
+    patch_obj = {
+        'name': plan_json.get('name'),
+        'sku': plan_json.get('sku'),
+        'properties': {'storageMounts': mounts}
+    }
+    patch_url = f"/subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.Web/serverfarms/{name}?api-version={api_version}"
+    patch_request_url = cmd.cli_ctx.cloud.endpoints.resource_manager + patch_url
+    headers = ['Content-Type=application/json']
+    import json
+    patch_response = send_raw_request(cmd.cli_ctx, "PATCH", patch_request_url, body=json.dumps(patch_obj), headers=headers)
+    patch_json = patch_response.json()
+    return patch_json.get('properties', {}).get('storageMounts', [])
+
+def add_plan_managed_instance_storage_mount(cmd, resource_group_name, name, mount_name, mount_type, source, destination_path, credentials_secret_uri):
+    """Add or update a storage mount for a managed instance app service plan."""
+    from azure.cli.core.commands.client_factory import get_subscription_id
+    client = web_client_factory(cmd.cli_ctx)
+    subscription_id = get_subscription_id(cmd.cli_ctx)
+    api_version = client.DEFAULT_API_VERSION
+    plan_url = f"/subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.Web/serverfarms/{name}?api-version={api_version}"
+    request_url = cmd.cli_ctx.cloud.endpoints.resource_manager + plan_url
+    response = send_raw_request(cmd.cli_ctx, "GET", request_url)
+    plan_json = response.json()
+    mounts = plan_json.get('properties', {}).get('storageMounts', [])
+    # Remove any existing mount with same name (case-insensitive)
+    mounts = [m for m in mounts if m.get('name', '').lower() != mount_name.lower()]
+    # Build new mount object
+    mount_obj = {
+        'name': mount_name,
+        'type': mount_type,
+        'source': source,
+        'destinationPath': destination_path
+    }
+    mount_obj['credentialsKeyVaultReference'] = {
+        'secretUri': credentials_secret_uri
+    }
+    mounts.append(mount_obj)
+    return _patch_plan_storage_mounts(cmd, plan_json, resource_group_name, name, mounts)
+
+def remove_plan_managed_instance_storage_mount(cmd, resource_group_name, name, mount_name):
+    """Remove a storage mount from a managed instance app service plan."""
+    from azure.cli.core.commands.client_factory import get_subscription_id
+    client = web_client_factory(cmd.cli_ctx)
+    subscription_id = get_subscription_id(cmd.cli_ctx)
+    api_version = client.DEFAULT_API_VERSION
+    plan_url = f"/subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.Web/serverfarms/{name}?api-version={api_version}"
+    request_url = cmd.cli_ctx.cloud.endpoints.resource_manager + plan_url
+    response = send_raw_request(cmd.cli_ctx, "GET", request_url)
+    plan_json = response.json()
+    mounts = plan_json.get('properties', {}).get('storageMounts', [])
+    # Remove by case-insensitive name
+    mounts = [m for m in mounts if m.get('name', '').lower() != mount_name.lower()]
+    return _patch_plan_storage_mounts(cmd, plan_json, resource_group_name, name, mounts)
+
 def list_plan_managed_instance_install_scripts(cmd, resource_group_name, name):
     """List install scripts for a managed instance app service plan."""
     from azure.cli.core.commands.client_factory import get_subscription_id

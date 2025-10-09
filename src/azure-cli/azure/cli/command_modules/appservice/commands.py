@@ -328,6 +328,11 @@ def load_command_table(self, _):
         g.custom_command('add', 'add_plan_managed_instance_install_script')
         g.custom_command('remove', 'remove_plan_managed_instance_install_script')
 
+    with self.command_group('appservice plan managed-instance storage-mount') as g:
+        g.custom_command('list', 'list_plan_managed_instance_storage_mounts')
+        g.custom_command('add', 'add_plan_managed_instance_storage_mount')
+        g.custom_command('remove', 'remove_plan_managed_instance_storage_mount')
+
     with self.command_group('appservice') as g:
         g.custom_command('list-locations', 'list_locations', transform=transform_list_location_output)
 
