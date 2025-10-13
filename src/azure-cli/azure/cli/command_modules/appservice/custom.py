@@ -10313,13 +10313,13 @@ def list_plan_managed_instances(cmd, resource_group_name, name):
     return response.json()
 
 
-def recycle_plan_managed_instances(cmd, resource_group_name, name, worker_name):
-    """Recycle instances for a managed instance app service plan."""
+def recycle_plan_managed_instance(cmd, resource_group_name, name, worker_name):
+    """Recycle instance for a managed instance app service plan."""
     from azure.cli.core.commands.client_factory import get_subscription_id
     client = web_client_factory(cmd.cli_ctx)
     subscription_id = get_subscription_id(cmd.cli_ctx)
-    
-    # Use the App Service Management API to recycle instances
+
+    # Use the App Service Management API to recycle instance
     recycle_url_base = '/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Web/serverfarms/{}/workers/{}/recycleinstance?api-version={}'
     recycle_url = recycle_url_base.format(subscription_id, resource_group_name, name, worker_name, client.DEFAULT_API_VERSION)
     request_url = cmd.cli_ctx.cloud.endpoints.resource_manager + recycle_url

@@ -320,7 +320,7 @@ def load_command_table(self, _):
 
     with self.command_group('appservice plan managed-instance', custom_command_type=appservice_custom, is_preview=True) as g:
         g.custom_command('list-instances', 'list_plan_managed_instances')
-        g.custom_command('recycle-instance', 'recycle_plan_managed_instances')
+        g.custom_command('recycle-instance', 'recycle_plan_managed_instance')
         g.custom_show_command('show-rdp-password', 'show_plan_rdp_password')
 
     with self.command_group('appservice plan managed-instance install-script') as g:
