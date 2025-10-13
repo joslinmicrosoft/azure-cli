@@ -174,7 +174,7 @@ subscription than the app service environment, please use the resource ID for --
                    completer=get_resource_name_completion_list('Microsoft.Web/serverFarms'),
                    configured_default='appserviceplan', id_part='name')
 
-    with self.argument_context('appservice plan managed-instance recycle-instances') as c:
+    with self.argument_context('appservice plan managed-instance recycle-instance') as c:
         c.argument('worker_name', help='The name of the worker instance to recycle')
 
     with self.argument_context('appservice plan managed-instance show-rdp-password') as c:
