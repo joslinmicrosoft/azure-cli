@@ -10090,6 +10090,7 @@ def list_plan_managed_instance_storage_mounts(cmd, resource_group_name, name):
     plan_json = response.json()
     return plan_json.get('properties', {}).get('storageMounts', [])
 
+
 def _patch_plan_storage_mounts(cmd, plan_json, resource_group_name, name, mounts):
     """Helper to PATCH storageMounts for a managed instance app service plan."""
     from azure.cli.core.commands.client_factory import get_subscription_id
@@ -10135,6 +10136,7 @@ def add_plan_managed_instance_storage_mount(cmd, resource_group_name, name, moun
     mounts.append(mount_obj)
     return _patch_plan_storage_mounts(cmd, plan_json, resource_group_name, name, mounts)
 
+
 def remove_plan_managed_instance_storage_mount(cmd, resource_group_name, name, mount_name):
     """Remove a storage mount from a managed instance app service plan."""
     from azure.cli.core.commands.client_factory import get_subscription_id
@@ -10149,6 +10151,7 @@ def remove_plan_managed_instance_storage_mount(cmd, resource_group_name, name, m
     # Remove by case-insensitive name
     mounts = [m for m in mounts if m.get('name', '').lower() != mount_name.lower()]
     return _patch_plan_storage_mounts(cmd, plan_json, resource_group_name, name, mounts)
+
 
 def list_plan_managed_instance_install_scripts(cmd, resource_group_name, name):
     """List install scripts for a managed instance app service plan."""
@@ -10182,6 +10185,7 @@ def _patch_plan_install_scripts(cmd, plan_json, resource_group_name, name, scrip
     patch_response = send_raw_request(cmd.cli_ctx, "PATCH", patch_request_url, body=json.dumps(patch_obj), headers=headers)
     patch_json = patch_response.json()
     return patch_json.get('properties', {}).get('installScripts', [])
+
 
 def add_plan_managed_instance_install_script(cmd, resource_group_name, name, install_script_name, source_uri, type):
     """Add or update an install script for a managed instance app service plan."""
@@ -10223,6 +10227,78 @@ def remove_plan_managed_instance_install_script(cmd, resource_group_name, name, 
     return _patch_plan_install_scripts(cmd, plan_json, resource_group_name, name, scripts)
 
 
+
+def list_plan_managed_instance_registry_adapters(cmd, resource_group_name, name):
+    """List registry adapters for a managed instance app service plan."""
+    from azure.cli.core.commands.client_factory import get_subscription_id
+    client = web_client_factory(cmd.cli_ctx)
+    subscription_id = get_subscription_id(cmd.cli_ctx)
+    api_version = client.DEFAULT_API_VERSION
+    plan_url = f"/subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.Web/serverfarms/{name}?api-version={api_version}"
+    request_url = cmd.cli_ctx.cloud.endpoints.resource_manager + plan_url
+    response = send_raw_request(cmd.cli_ctx, "GET", request_url)
+    plan_json = response.json()
+    return plan_json.get('properties', {}).get('registryAdapters', [])
+
+
+def _patch_plan_registry_adapters(cmd, plan_json, resource_group_name, name, adapters):
+    """Helper to PATCH registryAdapters for a managed instance app service plan."""
+    from azure.cli.core.commands.client_factory import get_subscription_id
+    client = web_client_factory(cmd.cli_ctx)
+    subscription_id = get_subscription_id(cmd.cli_ctx)
+    api_version = client.DEFAULT_API_VERSION
+    patch_obj = {
+        'name': plan_json.get('name'),
+        'sku': plan_json.get('sku'),
+        'properties': {'registryAdapters': adapters}
+    }
+    patch_url = f"/subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.Web/serverfarms/{name}?api-version={api_version}"
+    patch_request_url = cmd.cli_ctx.cloud.endpoints.resource_manager + patch_url
+    headers = ['Content-Type=application/json']
+    import json
+    patch_response = send_raw_request(cmd.cli_ctx, "PATCH", patch_request_url, body=json.dumps(patch_obj), headers=headers)
+    patch_json = patch_response.json()
+    return patch_json.get('properties', {}).get('registryAdapters', [])
+
+
+def add_plan_managed_instance_registry_adapter(cmd, resource_group_name, name, registry_key, adapter_type, secret_uri):
+    """Add or update a registry adapter for a managed instance app service plan."""
+    from azure.cli.core.commands.client_factory import get_subscription_id
+    client = web_client_factory(cmd.cli_ctx)
+    subscription_id = get_subscription_id(cmd.cli_ctx)
+    api_version = client.DEFAULT_API_VERSION
+    plan_url = f"/subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.Web/serverfarms/{name}?api-version={api_version}"
+    request_url = cmd.cli_ctx.cloud.endpoints.resource_manager + plan_url
+    response = send_raw_request(cmd.cli_ctx, "GET", request_url)
+    plan_json = response.json()
+    adapters = plan_json.get('properties', {}).get('registryAdapters', [])
+    adapters = [a for a in adapters if a.get('registryKey', '').lower() != registry_key.lower()]
+    adapter_obj = {
+        'registryKey': registry_key,
+        'type': adapter_type,
+        'keyVaultSecretReference': {
+            'secretUri': secret_uri
+        }
+    }
+    adapters.append(adapter_obj)
+    return _patch_plan_registry_adapters(cmd, plan_json, resource_group_name, name, adapters)
+
+
+def remove_plan_managed_instance_registry_adapter(cmd, resource_group_name, name, registry_key):
+    """Remove a registry adapter from a managed instance app service plan."""
+    from azure.cli.core.commands.client_factory import get_subscription_id
+    client = web_client_factory(cmd.cli_ctx)
+    subscription_id = get_subscription_id(cmd.cli_ctx)
+    api_version = client.DEFAULT_API_VERSION
+    plan_url = f"/subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.Web/serverfarms/{name}?api-version={api_version}"
+    request_url = cmd.cli_ctx.cloud.endpoints.resource_manager + plan_url
+    response = send_raw_request(cmd.cli_ctx, "GET", request_url)
+    plan_json = response.json()
+    adapters = plan_json.get('properties', {}).get('registryAdapters', [])
+    adapters = [a for a in adapters if a.get('registryKey', '').lower() != registry_key.lower()]
+    return _patch_plan_registry_adapters(cmd, plan_json, resource_group_name, name, adapters)
+
+
 def list_plan_managed_instances(cmd, resource_group_name, name):
     """List instances for a managed instance app service plan."""
     from azure.cli.core.commands.client_factory import get_subscription_id
@@ -10249,7 +10325,7 @@ def recycle_plan_managed_instances(cmd, resource_group_name, name, worker_name):
     request_url = cmd.cli_ctx.cloud.endpoints.resource_manager + recycle_url
     response = send_raw_request(cmd.cli_ctx, "POST", request_url)
     if response.status_code == 200:
-        return "Recycled successfully."
+        return f"Instance {worker_name} recycled successfully."
 
     raise CLIError(f"Unexpected response status '{response.status_code}': {getattr(response, 'text', '')}")
 

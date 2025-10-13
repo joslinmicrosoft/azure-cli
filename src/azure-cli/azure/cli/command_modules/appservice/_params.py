@@ -43,6 +43,7 @@ BASIC_AUTH_TYPES = ['Enabled', 'Disabled']
 DAPR_LOG_LEVELS = ['debug', 'error', 'info', 'warn']
 INSTALL_SCRIPT_TYPES = ['RemoteAzureBlob', 'PlatformStorage']
 STORAGE_MOUNT_TYPES = ['AzureFiles', 'LocalStorage', 'FileShare']
+REGISTRY_ADAPTER_TYPES = ['Binary', 'String', 'Expand_String', 'Multi_String', 'DWord', 'QWord']
 
 # pylint: disable=too-many-statements, too-many-lines
 
@@ -136,17 +137,17 @@ subscription than the app service environment, please use the resource ID for --
                     help='accept system or user assigned identities separated by spaces. Use \'[system]\' to refer system assigned identity, or a resource id to refer user assigned identity. Check out help for more examples')
         c.argument('default_identity', is_preview=True,
                     help='accept system or user assigned identity separated. Use \'[system]\' to refer system assigned identity, or a resource id to refer user assigned identity.')
-        c.argument('rdp_enabled', is_preview=True,
+        c.argument('rdp_enabled', action='store_true', is_preview=True,
                    help='Enable RDP. Requires is-custom-mode to be true.')
         c.argument('subnet', is_preview=True, help='Name or ID of existing subnet. To create vnet and/or subnet \
                    use `az network vnet [subnet] create`')
         c.argument('vnet_name', is_preview=True,
                    help='Name of the vNet. Mandatory if only subnet name is specified.')
-        c.argument('registry_adapters', is_preview=True, action=FooRuleAddAction, nargs='+',
+        c.argument('registry_adapters', options_list=['--registry-adapter'], is_preview=True, action=FooRuleAddAction, nargs='+',
                    help="Registry adapter configurations.")
-        c.argument('install_scripts', is_preview=True, action=FooRuleAddAction, nargs='+',
+        c.argument('install_scripts', options_list=['--install-script'], is_preview=True, action=FooRuleAddAction, nargs='+',
                    help="Install script configurations.")
-        c.argument('storage_mounts', is_preview=True, action=FooRuleAddAction, nargs='+',
+        c.argument('storage_mounts', options_list=['--storage-mount'], is_preview=True, action=FooRuleAddAction, nargs='+',
                    help="Storage mount configurations.")
 
     with self.argument_context('appservice plan update') as c:
@@ -222,6 +223,28 @@ subscription than the app service environment, please use the resource ID for --
         c.argument('resource_group_name', arg_type=resource_group_name_type)
         c.argument('name', arg_type=name_arg_type, help='The name of the app service plan')
         c.argument('mount_name', options_list=['--mount-name'], help='Name of the storage mount to remove')
+
+    with self.argument_context('appservice plan managed-instance registry-adapter') as c:
+        c.argument('name', arg_type=name_arg_type, help='The name of the app service plan',
+                    completer=get_resource_name_completion_list('Microsoft.Web/serverFarms'),
+                    configured_default='appserviceplan', id_part='name',
+                    local_context_attribute=LocalContextAttribute(name='plan_name', actions=[LocalContextAction.GET]))
+        c.argument('resource_group_name', arg_type=resource_group_name_type)
+
+    with self.argument_context('appservice plan managed-instance registry-adapter list') as c:
+        pass
+
+    with self.argument_context('appservice plan managed-instance registry-adapter add') as c:
+        c.argument('resource_group_name', arg_type=resource_group_name_type)
+        c.argument('name', arg_type=name_arg_type, help='The name of the app service plan')
+        c.argument('registry_key', options_list=['--registry-key'], help='Registry key for the adapter')
+        c.argument('adapter_type', options_list=['--type'], arg_type=get_enum_type(REGISTRY_ADAPTER_TYPES), help='Type of the registry adapter')
+        c.argument('secret_uri', options_list=['--secret-uri'], help='Key Vault secret URI for the value')
+
+    with self.argument_context('appservice plan managed-instance registry-adapter remove') as c:
+        c.argument('resource_group_name', arg_type=resource_group_name_type)
+        c.argument('name', arg_type=name_arg_type, help='The name of the app service plan')
+        c.argument('registry_key', options_list=['--registry-key'], help='Registry key for the adapter to remove')
         
     with self.argument_context('webapp create') as c:
         c.argument('name', options_list=['--name', '-n'], help='Name of the new web app. Web app name can contain only allow alphanumeric characters and hyphens, it cannot start or end in a hyphen, and must be less than 64 characters.',
