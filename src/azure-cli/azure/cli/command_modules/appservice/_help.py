@@ -39,17 +39,6 @@ type: group
 short-summary: Manage app service plans.
 """
 
-helps['appservice plan managed-instance rdp-to-instance'] = """
-type: command
-short-summary: Initiate an RDP session to a managed instance App Service plan worker via Azure Bastion.
-long-summary: This command shells out to 'az network bastion rdp'. Azure Bastion must already be deployed and have network access to the worker's subnet. RDP username will be 'Administrator'.
-examples:
-  - name: RDP to a specific worker instance using a Bastion host in the same resource group.
-    text: az appservice plan managed-instance rdp-to-instance -g MyRG -n MyPlan --worker-name MyWorker --bastion-name MyBastion
-  - name: RDP to a worker using a Bastion host in another resource group.
-    text: az appservice plan managed-instance rdp-to-instance -g MyRG -n MyPlan --worker-name MyWorker --bastion-name MyBastion --bastion-resource-group NetworkRG
-"""
-
 helps['appservice plan create'] = """
 type: command
 short-summary: Create an app service plan.
