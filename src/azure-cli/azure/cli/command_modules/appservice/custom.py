@@ -10392,9 +10392,6 @@ def rdp_to_plan_instance(cmd, resource_group_name, name, bastion_name, bastion_r
     if not password_value:
         raise CLIInternalError(f"Failed to retrieve RDP password")
     
-    logger.warning("RDP username: Administrator")
-    logger.warning("RDP password: %s", password_value)
-
     # 4. Invoke the Bastion RDP command
     bastion_cmd = [
         'az', 'network', 'bastion', 'rdp',
@@ -10402,6 +10399,11 @@ def rdp_to_plan_instance(cmd, resource_group_name, name, bastion_name, bastion_r
         '--resource-group', bastion_resource_group_name,
         '--target-ip-address', target_ip
     ]
+
+    logger.warning("Invoking Bastion RDP command: %s", ' '.join(bastion_cmd))
+    logger.warning("Use the following credentials to login:")
+    logger.warning("RDP username: Administrator")
+    logger.warning("RDP password: %s", password_value)
 
     # Execute and ignore return payload (side effect: launches RDP session / saves .rdp file)
     try:
